@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste Firebase</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h1>Teste Firebase Firestore</h1>
+  <div id="status">Testando conexão...</div>
+  <button onclick="testarConexao()">Testar Conexão</button>
+  <div id="resultado"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
+      authDomain: "vastbitloud-2872a.firebaseapp.com",
+      projectId: "vastbitloud-2872a"
+    };
+
+    let db = null;
+
+    function inicializarFirebase() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        document.getElementById("status").textContent = "Firebase inicializado ✅";
+      } catch (error) {
+        document.getElementById("status").textContent = "Erro Firebase: " + error.message;
+      }
+    }
+
+    async function testarConexao() {
+      try {
+        const resultado = document.getElementById("resultado");
+        resultado.textContent = "Testando...";
+
+        // Teste básico de leitura
+        const snapshot = await db.collection("compras").limit(1).get();
+
+        resultado.innerHTML = `
+          <h3>✅ Conexão OK!</h3>
+          <p>Encontrados ${snapshot.size} documentos de teste</p>
+          <p>Firestore está funcionando corretamente</p>
+        `;
+
+      } catch (error) {
+        document.getElementById("resultado").innerHTML = `
+          <h3>❌ Erro na conexão</h3>
+          <p>${error.message}</p>
+        `;
+      }
+    }
+
+    inicializarFirebase();
+  </script>
+</body>
+</html>
