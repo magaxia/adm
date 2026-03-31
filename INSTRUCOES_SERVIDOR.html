@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Servidor Local - Clique Duplo para Rodar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 600px;
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        p { color: #666; line-height: 1.6; font-size: 16px; }
+        .code {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            overflow-x: auto;
+        }
+        .step {
+            text-align: left;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .step strong { color: #667eea; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SERVIDOR LOCAL</h1>
+        <p>Seu sistema precisa rodar em <strong>HTTP</strong>, não em <strong>file://</strong></p>
+
+        <div class="step">
+            <strong>✅ Passo 1: Abra PowerShell</strong>
+            <p>Clique no botão abaixo para copiar o comando</p>
+        </div>
+
+        <div class="code" id="comando">cd 'c:\Users\Kalebi\Downloads'; python -m http.server 8000</div>
+        
+        <button onclick="copiarComando()">📋 Copiar Comando</button>
+
+        <div class="step">
+            <strong>✅ Passo 2: Cole no PowerShell</strong>
+            <p>Clique direito + Colar no PowerShell</p>
+        </div>
+
+        <div class="step">
+            <strong>✅ Passo 3: Acesse seus arquivos</strong>
+        </div>
+
+        <div class="code">
+            http://localhost:8000/login.html
+            http://localhost:8000/painel.html
+            http://localhost:8000/perfil.html
+            http://localhost:8000/produtos.html
+            http://localhost:8000/deposito.html
+            http://localhost:8000/saque.html
+        </div>
+
+        <button onclick="abrirLogin()">🌐 Abrir Login</button>
+        <button onclick="abrirPainel()">📊 Abrir Painel</button>
+
+        <div class="success" id="sucesso">✅ Copiado! Cole no PowerShell</div>
+    </div>
+
+    <script>
+        function copiarComando() {
+            const cmd = document.getElementById('comando').innerText;
+            navigator.clipboard.writeText(cmd).then(() => {
+                const msg = document.getElementById('sucesso');
+                msg.style.display = 'block';
+                setTimeout(() => { msg.style.display = 'none'; }, 3000);
+            });
+        }
+
+        function abrirLogin() {
+            window.open('http://localhost:8000/login.html', '_blank');
+        }
+
+        function abrirPainel() {
+            window.open('http://localhost:8000/painel.html', '_blank');
+        }
+    </script>
+</body>
+</html>
