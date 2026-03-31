@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Usuários v3 - Corrigido</title>
+
+    <!-- Firebase v9 Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #138496;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease-in-out;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filters input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-ativo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-desativado {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .saldo {
+            font-weight: bold;
+            color: #1e7e34;
+        }
+
+        .saldo.negativo {
+            color: #c82333;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-password {
+            background: #6c3fb5;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn-save {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+        }
+
+        .btn-save:hover {
+            background: #218838;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+        }
+
+        .modal-alert {
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            margin: 20px 0 15px 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .filters input {
+                min-width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .btn {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>👥 Gerenciamento de Usuários v3</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="btn-novo">➕ Novo Usuário</button>
+                <button class="btn btn-primary" id="btn-atualizar">🔄 Atualizar</button>
+                <button class="btn btn-secondary" id="btn-logout" style="display: none;">👋 Logout</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div id="alert-container"></div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">👥 Total</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">✅ Ativos</div>
+                    <div class="stat-value" id="stat-ativos">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💰 Saldo Total</div>
+                    <div class="stat-value" id="stat-saldo">R$ 0</div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="filtro" placeholder="Filtrar por nome ou email...">
+            </div>
+
+            <h2>Usuários</h2>
+            <div id="usuarios-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo/Editar Usuário -->
+    <div id="modal-usuario" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Novo Usuário</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div id="modal-alert" class="modal-alert"></div>
+            <form id="form-usuario">
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="form-nome" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="form-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="form-status">
+                        <option value="ativo">✅ Ativo</option>
+                        <option value="desativado">❌ Desativado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Saldo (R$)</label>
+                    <input type="number" id="form-saldo" value="0" step="0.01" min="0">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" id="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn btn-save">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ====================================
+        // FIREBASE INIT
+        // ====================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
+            authDomain: "vastbitloud-2872a.firebaseapp.com",
+            projectId: "vastbitloud-2872a",
+            storageBucket: "vastbitloud-2872a.firebasestorage.app",
+            messagingSenderId: "952931184412",
+            appId: "1:952931184412:web:ee2a0e38826c30dd0cd4d9"
+        };
+
+        let app, db, auth;
+        let usuarioLogado = null;
+        let usuarios = [];
+        let unsubscribe = null;
+
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+            console.log("✅ Firebase inicializado");
+        } catch (e) {
+            console.error("❌ Erro Firebase:", e.message);
+        }
+
+        // ====================================
+        // UTILITIES
+        // ====================================
+        function mostrarAlerta(msg, tipo = "info") {
+            const alerta = document.createElement("div");
+            alerta.className = `alert alert-${tipo}`;
+            alerta.textContent = msg;
+            document.getElementById("alert-container").appendChild(alerta);
+
+            setTimeout(() => alerta.remove(), 4000);
+        }
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL"
+            }).format(valor);
+        }
+
+        // ====================================
+        // AUTH
+        // ====================================
+        async function verificarUsuario() {
+            return new Promise((resolve) => {
+                auth.onAuthStateChanged((user) => {
+                    usuarioLogado = user;
+                    document.getElementById("btn-logout").style.display = user ? "inline-block" : "none";
+                    if (user) {
+                        console.log("✅ Usuário logado:", user.email);
+                        carregarUsuarios();
+                    } else {
+                        console.log("⚠️ Não logado");
+                    }
+                    resolve(!!user);
+                });
+            });
+        }
+
+        // ====================================
+        // CARREGAR DADOS
+        // ====================================
+        async function carregarUsuarios() {
+            if (!usuarioLogado) {
+                mostraTelaLogin();
+                return;
+            }
+
+            try {
+                document.getElementById("usuarios-container").innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando usuários...</p>
+                    </div>
+                `;
+
+                if (unsubscribe) unsubscribe();
+
+                unsubscribe = db.collection("users").onSnapshot(
+                    (snap) => {
+                        usuarios = [];
+                        snap.forEach(doc => {
+                            usuarios.push({ id: doc.id, ...doc.data() });
+                        });
+                        console.log("✅ Usuários carregados:", usuarios.length);
+                        renderizarUsuarios();
+                        atualizarEstatisticas();
+                    },
+                    (error) => {
+                        console.error("❌ Erro Firestore:", error.code);
+                        if (error.code === "failed-precondition") {
+                            document.getElementById("usuarios-container").innerHTML = `
+                                <div class="alert alert-warning">
+                                    ⚠️ Índice do Firestore não configurado<br>
+                                    Clique no link no console para criar
+                                </div>
+                            `;
+                        } else if (error.code === "permission-denied") {
+                            mostrarAlerta("❌ Permissão negada - configure Security Rules", "error");
+                        } else {
+                            mostrarAlerta("❌ Erro ao carregar dados: " + error.message, "error");
+                        }
+                    }
+                );
+            } catch (e) {
+                console.error("❌ Erro:", e);
+                mostrarAlerta("Erro ao carregar: " + e.message, "error");
+            }
+        }
+
+        function renderizarUsuarios(dados = usuarios) {
+            if (dados.length === 0) {
+                document.getElementById("usuarios-container").innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <p>Nenhum usuário encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Saldo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            dados.forEach(u => {
+                const saldo = u.saldo || 0;
+                const statusClass = u.status === "ativo" ? "status-ativo" : "status-desativado";
+                const saldoClass = saldo < 0 ? "negativo" : "";
+
+                html += `
+                    <tr>
+                        <td>${u.nome || "N/A"}</td>
+                        <td>${u.email || "N/A"}</td>
+                        <td><span class="status ${statusClass}">${u.status || "ativo"}</span></td>
+                        <td><span class="saldo ${saldoClass}">${formatarMoeda(saldo)}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn-sm btn-edit" onclick="editarUsuario('${u.id}')">✏️</button>
+                                <button class="btn-sm btn-delete" onclick="deletarUsuario('${u.id}', '${u.nome}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById("usuarios-container").innerHTML = html;
+        }
+
+        function atualizarEstatisticas() {
+            const total = usuarios.length;
+            const ativos = usuarios.filter(u => u.status === "ativo").length;
+            const saldoTotal = usuarios.reduce((sum, u) => sum + (u.saldo || 0), 0);
+
+            document.getElementById("stat-total").textContent = total;
+            document.getElementById("stat-ativos").textContent = ativos;
+            document.getElementById("stat-saldo").textContent = formatarMoeda(saldoTotal);
+        }
+
+        // ====================================
+        // CRUD
+        // ====================================
+        async function salvarUsuario(e) {
+            e.preventDefault();
+
+            const nome = document.getElementById("form-nome").value;
+            const email = document.getElementById("form-email").value;
+            const status = document.getElementById("form-status").value;
+            const saldo = parseFloat(document.getElementById("form-saldo").value) || 0;
+
+            try {
+                if (!nome || !email) {
+                    mostrarAlerta("Preencha todos os campos", "error");
+                    return;
+                }
+
+                const novoUsuario = {
+                    nome,
+                    email,
+                    status,
+                    saldo,
+                    updatedAt: new Date()
+                };
+
+                await db.collection("users").add(novoUsuario);
+                console.log("✅ Usuário criado");
+                mostrarAlerta("✅ Usuário criado com sucesso", "success");
+
+                fecharModal();
+                document.getElementById("form-usuario").reset();
+
+            } catch (error) {
+                console.error("❌ Erro ao salvar:", error);
+                mostrarAlerta("Erro: " + error.message, "error");
+            }
+        }
+
+        async function deletarUsuario(id, nome) {
+            if (!confirm(`Deletar ${nome}?`)) return;
+
+            try {
+                await db.collection("users").doc(id).delete();
+                console.log("✅ Usuário deletado");
+                mostrarAlerta("✅ Usuário deletado", "success");
+            } catch (error) {
+                console.error("❌ Erro ao deletar:", error);
+                mostrarAlerta("Erro: " + error.message, "error");
+            }
+        }
+
+        function editarUsuario(id) {
+            mostrarAlerta("⏳ Edição: clique em 'Novo Usuário' para clonar dados", "info");
+        }
+
+        // ====================================
+        // MODAL
+        // ====================================
+        function abrirModal() {
+            document.getElementById("modal-usuario").classList.add("show");
+            document.getElementById("form-usuario").reset();
+        }
+
+        function fecharModal() {
+            document.getElementById("modal-usuario").classList.remove("show");
+        }
+
+        // ====================================
+        // FILTRO
+        // ====================================
+        function filtrar() {
+            const filtro = document.getElementById("filtro").value.toLowerCase();
+            if (!filtro) {
+                renderizarUsuarios();
+                return;
+            }
+
+            const filtrados = usuarios.filter(u =>
+                (u.nome || "").toLowerCase().includes(filtro) ||
+                (u.email || "").toLowerCase().includes(filtro)
+            );
+            renderizarUsuarios(filtrados);
+        }
+
+        // ====================================
+        // LOGIN
+        // ====================================
+        function mostraTelaLogin() {
+            document.getElementById("usuarios-container").innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔒</div>
+                    <p>Você não está logado</p>
+                    <button class="btn btn-primary" onclick="fazerLogin()">🔐 Fazer Login</button>
+                </div>
+            `;
+        }
+
+        async function fazerLogin() {
+            const email = prompt("Email:");
+            if (!email) return;
+            const senha = prompt("Senha:");
+            if (!senha) return;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, senha);
+                console.log("✅ Login OK");
+                mostrarAlerta("✅ Login realizado", "success");
+            } catch (error) {
+                console.error("❌ Erro login:", error.message);
+                mostrarAlerta("Erro: " + error.message, "error");
+            }
+        }
+
+        async function fazerLogout() {
+            try {
+                await auth.signOut();
+                console.log("✅ Logout OK");
+                mostrarAlerta("✅ Desconectado", "success");
+            } catch (error) {
+                mostrarAlerta("Erro: " + error.message, "error");
+            }
+        }
+
+        // ====================================
+        // EVENTS
+        // ====================================
+        document.getElementById("btn-novo").onclick = abrirModal;
+        document.getElementById("btn-atualizar").onclick = carregarUsuarios;
+        document.getElementById("btn-logout").onclick = fazerLogout;
+        document.getElementById("btn-cancelar").onclick = fecharModal;
+        document.querySelector(".modal-close").onclick = fecharModal;
+        document.getElementById("form-usuario").onsubmit = salvarUsuario;
+        document.getElementById("filtro").oninput = filtrar;
+
+        // ====================================
+        // INIT
+        // ====================================
+        window.addEventListener("DOMContentLoaded", async () => {
+            console.log("🚀 Sistema iniciando...");
+            await verificarUsuario();
+        });
+
+        console.log("✅ Script carregado");
+    </script>
+</body>
+</html>
